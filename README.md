@@ -1,6 +1,5 @@
 # UniPilot — Smart University Academic Management + AI Advisor
 
-UniPilot là MVP đồ án Công nghệ phần mềm theo hướng: **hệ thống quản lý học vụ là phần chính, AI chỉ là module hỗ trợ cố vấn học tập**.
 
 ## Stack
 
