@@ -1,0 +1,18 @@
+using UniPilot.Api.Data;
+using UniPilot.Api.Domain;
+using UniPilot.Api.Services;
+var builder=WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls("http://localhost:5080");
+builder.Services.AddCors(o=>o.AddDefaultPolicy(p=>p.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:5174")));
+builder.Services.AddSingleton<IReadOnlyList<Course>>(SeedData.Courses);
+builder.Services.AddSingleton(SeedData.DemoStudent);
+builder.Services.AddSingleton<AcademicRuleEngine>();
+builder.Services.AddHttpClient<IAdvisorNarrator,AdvisorNarrator>();
+builder.Services.AddScoped<AcademicAdvisorService>();
+var app=builder.Build(); app.UseCors();
+app.MapGet("/health",()=>Results.Ok(new{status="ok",service="UniPilot.Api"}));
+app.MapGet("/api/courses",(IReadOnlyList<Course> courses)=>Results.Ok(courses));
+app.MapGet("/api/students/demo",(StudentProfile student)=>Results.Ok(student));
+app.MapGet("/api/advisor/eligible/demo",(string? careerGoal,StudentProfile student,AcademicAdvisorService advisor)=>Results.Ok(advisor.GetEligibility(student,string.IsNullOrWhiteSpace(careerGoal)?"Backend .NET Developer":careerGoal)));
+app.MapPost("/api/advisor/plan/demo",async(PlanRequest request,StudentProfile student,AcademicAdvisorService advisor,CancellationToken ct)=>Results.Ok(await advisor.BuildPlanAsync(student,string.IsNullOrWhiteSpace(request.CareerGoal)?"Backend .NET Developer":request.CareerGoal.Trim(),request.MaxCredits??12,ct)));
+app.Run();
