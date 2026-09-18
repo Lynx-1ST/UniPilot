@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: unipilot-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: unipilot
+      POSTGRES_PASSWORD: unipilot
+      POSTGRES_DB: unipilot
+    ports:
+      - "5432:5432"
+    volumes:
+      - unipilot_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U unipilot -d unipilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  unipilot_postgres_data:

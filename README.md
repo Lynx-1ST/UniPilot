@@ -1,49 +1,92 @@
 # UniPilot — Smart University Academic Management + AI Advisor
 
-UniPilot is an MVP for a software-engineering capstone: the core product is a university academic management system, while AI is a small advisory module.
+UniPilot là MVP đồ án Công nghệ phần mềm theo hướng: **hệ thống quản lý học vụ là phần chính, AI chỉ là module hỗ trợ cố vấn học tập**.
 
-## Philosophy
+## Stack
 
-- Academic rules stay deterministic.
-- Prerequisites are checked by backend business logic.
-- AI only explains/personalizes recommendations.
-- The app still works without any AI API key.
+- Frontend: React + TypeScript + Vite
+- Backend: NestJS + TypeScript
+- ORM: Prisma
+- Database: PostgreSQL
+- AI: OpenAI-compatible provider (optional)
+- Local infrastructure: Docker Compose
 
-## MVP features
+## Nguyên tắc kiến trúc
+
+AI không được tự quyết định điều kiện tiên quyết. Luồng đúng là:
+
+```text
+Student data
+   ↓
+Academic Rule Engine
+   ↓
+Eligible courses
+   ↓
+AI Advisor
+   ↓
+Explanation / personalization
+```
+
+Nếu không cấu hình API key AI, backend vẫn chạy bằng deterministic fallback.
+
+## Chức năng MVP
 
 - Course catalog
 - Prerequisite graph
-- Demo student profile
-- Eligible-course calculation
-- Credit-limited semester planning
-- Career-goal-aware ranking
-- Optional OpenAI-compatible advisor narration
+- Student profile demo
+- Tính môn đủ điều kiện
+- Lập kế hoạch học kỳ theo giới hạn tín chỉ
+- Xếp ưu tiên theo mục tiêu nghề nghiệp
+- AI Academic Advisor
 - React dashboard
 
-## Tech stack
-
-- Backend: ASP.NET Core (.NET 10)
-- Frontend: React + TypeScript + Vite
-- Planned production DB: PostgreSQL + EF Core
-
-## Run backend
+## Chạy PostgreSQL
 
 ```bash
-cd backend/UniPilot.Api
-dotnet run
+docker compose up -d
 ```
 
-API: `http://localhost:5080`
+## Chạy backend
 
-Optional AI configuration:
+Yêu cầu Node.js 20+.
+
+```bash
+cd backend
+cp .env.example .env
+npm install
+npm run prisma:generate
+npm run prisma:migrate -- --name init
+npm run prisma:seed
+npm run start:dev
+```
+
+Windows PowerShell có thể dùng:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Backend: `http://localhost:5080`
+
+Health check:
+
+```text
+GET http://localhost:5080/health
+```
+
+### AI optional
+
+Trong `backend/.env`:
 
 ```env
-AI_API_KEY=...
+AI_API_KEY=
 AI_BASE_URL=https://api.openai.com/v1
 AI_MODEL=gpt-4o-mini
 ```
 
-## Run frontend
+Có thể thay bằng provider OpenAI-compatible khác.
+
+## Chạy frontend
 
 ```bash
 cd web
@@ -51,17 +94,55 @@ npm install
 npm run dev
 ```
 
-Web: `http://localhost:5174`
+Frontend: `http://localhost:5174`
 
-## Next capstone milestones
+## API MVP
 
-1. PostgreSQL + EF Core migrations
-2. JWT + Refresh Token + RBAC (Student/Lecturer/Advisor/Admin)
-3. Curriculum, semesters, course sections
-4. Course registration + timetable conflict detection
-5. Attendance, grading, transcript, GPA
-6. Graduation planner + what-if simulation
-7. AI advisor grounded on curriculum documents
-8. SignalR notifications
-9. Audit log
-10. xUnit + integration tests + Playwright
+- `GET /health`
+- `GET /api/courses`
+- `GET /api/students/demo`
+- `GET /api/advisor/eligible/demo?careerGoal=Backend%20Developer`
+- `POST /api/advisor/plan/demo`
+
+Ví dụ:
+
+```json
+{
+  "careerGoal": "Backend Developer",
+  "maxCredits": 12
+}
+```
+
+## Cấu trúc backend
+
+```text
+backend/
+├── prisma/
+│   ├── schema.prisma
+│   └── seed.ts
+├── src/
+│   ├── advisor/
+│   ├── ai/
+│   ├── courses/
+│   ├── health/
+│   ├── prisma/
+│   └── students/
+├── .env.example
+├── nest-cli.json
+├── package.json
+└── tsconfig.json
+```
+
+## Roadmap đồ án
+
+1. Auth + JWT + refresh token + RBAC
+2. Student / Lecturer / Advisor / Admin
+3. Curriculum + semester + course section
+4. Đăng ký học phần + kiểm tra trùng lịch
+5. Attendance + grades + transcript + GPA
+6. Graduation Planner + What-if Simulator
+7. RAG trên curriculum/syllabus
+8. pgvector cho semantic search
+9. Redis + queue nếu AI workload tăng
+10. Notification + audit log + test automation
+11. Nếu cần ML thật: tách Python/FastAPI inference service thay vì đổi toàn bộ backend
