@@ -1,0 +1,15 @@
+import React,{useEffect,useState} from 'react';
+import {createRoot} from 'react-dom/client';
+import {GraduationCap,Sparkles,BookOpen,AlertTriangle} from 'lucide-react';
+import './styles.css';
+
+type Student={fullName:string;major:string;gpa:number;earnedCredits:number;requiredCredits:number};
+type Plan={careerGoal:string;plannedCredits:number;maxCredits:number;courses:{code:string;name:string;credits:number;reason:string}[];advisorMessage:string};
+const API='http://localhost:5080';
+function App(){
+ const [student,setStudent]=useState<Student|null>(null); const [goal,setGoal]=useState('Backend .NET Developer'); const [credits,setCredits]=useState(12); const [plan,setPlan]=useState<Plan|null>(null); const [loading,setLoading]=useState(false);
+ useEffect(()=>{fetch(`${API}/api/students/demo`).then(r=>r.json()).then(setStudent).catch(()=>{});},[]);
+ async function build(){setLoading(true); try{const r=await fetch(`${API}/api/advisor/plan/demo`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({careerGoal:goal,maxCredits:credits})});setPlan(await r.json());}finally{setLoading(false)}}
+ return <main><header><div className="brand"><GraduationCap size={28}/>UniPilot</div><span className="pill">Smart Academic Management</span></header><section className="hero"><div><h1>Quản lý học vụ + cố vấn học tập thông minh</h1><p>Business rules quyết định điều kiện học phần. AI chỉ giải thích và cá nhân hóa kế hoạch.</p></div><Sparkles size={42}/></section>{student&&<section className="grid stats"><article><span>GPA</span><strong>{student.gpa.toFixed(2)}</strong></article><article><span>Tín chỉ</span><strong>{student.earnedCredits}/{student.requiredCredits}</strong></article><article><span>Tiến độ</span><strong>{Math.round(student.earnedCredits/student.requiredCredits*100)}%</strong></article></section>}<section className="panel"><div className="panelTitle"><BookOpen size={20}/><h2>AI Academic Advisor</h2></div><div className="form"><label>Mục tiêu nghề nghiệp<input value={goal} onChange={e=>setGoal(e.target.value)}/></label><label>Tín chỉ tối đa<input type="number" min={3} max={24} value={credits} onChange={e=>setCredits(Number(e.target.value))}/></label><button onClick={build} disabled={loading}>{loading?'Đang tạo kế hoạch...':'Tạo kế hoạch học kỳ'}</button></div></section>{plan&&<section className="panel"><h2>Kế hoạch đề xuất — {plan.plannedCredits}/{plan.maxCredits} tín chỉ</h2><div className="courses">{plan.courses.map(c=><article key={c.code}><div><b>{c.code}</b><h3>{c.name}</h3><p>{c.reason}</p></div><span>{c.credits} TC</span></article>)}</div><div className="advisor"><Sparkles size={18}/><p>{plan.advisorMessage}</p></div></section>}<section className="note"><AlertTriangle size={18}/><p>MVP dùng dữ liệu demo. Bản đồ án đầy đủ nên thêm PostgreSQL/EF Core, JWT/RBAC, đăng ký học phần, lịch học, điểm, transcript, graduation planner và audit log.</p></section></main>
+}
+createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);
