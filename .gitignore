@@ -2,8 +2,10 @@
 **/obj/
 **/node_modules/
 **/dist/
+**/coverage/
 .env
 .env.*
 !.env.example
 .vscode/
 .idea/
+.prisma/
